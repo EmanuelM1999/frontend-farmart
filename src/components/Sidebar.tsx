@@ -60,12 +60,22 @@ export default function Sidebar() {
                 "& .MuiDrawer-paper": {
                     width: drawerWidth,
                     boxSizing: "border-box",
-                    borderRight: "1px solid #e0e0e0",
+                    bgcolor: "background.paper",
+                    color: "text.primary",
+                    borderRight: 1,
+                    borderColor: "divider",
                 },
             }}
         >
             <Toolbar>
-                <Typography variant="h6">
+                <Typography
+                    variant="h6"
+                    sx={{
+                        fontWeight: 700,
+                        color: "text.primary",
+                        whiteSpace: "nowrap",
+                    }}
+                >
                     Farmart IPS
                 </Typography>
             </Toolbar>
@@ -93,19 +103,36 @@ export default function Sidebar() {
                                 sx={{
                                     borderRadius: 2,
                                     mb: 0.5,
+                                    color: "text.secondary",
+
+                                    "& .MuiListItemIcon-root": {
+                                        color: "text.secondary",
+                                        minWidth: 40,
+                                    },
+
+                                    "&:hover": {
+                                        bgcolor: "action.hover",
+                                        color: "text.primary",
+                                    },
+
                                     "&.Mui-selected": {
-                                        backgroundColor: "primary.main",
+                                        bgcolor: "primary.main",
                                         color: "primary.contrastText",
                                     },
-                                    "&.Mui-selected:hover": {
-                                        backgroundColor: "primary.dark",
-                                    },
+
                                     "&.Mui-selected .MuiListItemIcon-root": {
                                         color: "inherit",
                                     },
+
+                                    "&.Mui-selected:hover": {
+                                        bgcolor: "primary.dark",
+                                    },
                                 }}
                             >
-                                <ListItemIcon>{item.icon}</ListItemIcon>
+                                <ListItemIcon>
+                                    {item.icon}
+                                </ListItemIcon>
+
                                 <ListItemText primary={item.label} />
                             </ListItemButton>
                         );
