@@ -18,7 +18,7 @@ import {
     HistoryOutlined,
 } from "@mui/icons-material";
 
-import { useLocation, useNavigate } from "react-router-dom";
+//import { useLocation, useNavigate } from "react-router-dom";
 
 const drawerWidth = 250;
 
@@ -48,8 +48,8 @@ const menuItems = [
 export { drawerWidth };
 
 export default function Sidebar() {
-    const location = useLocation();
-    const navigate = useNavigate();
+    //const location = useLocation();
+    //const navigate = useNavigate();
 
     return (
         <Drawer
@@ -89,7 +89,7 @@ export default function Sidebar() {
                             <ListItemButton
                                 key={item.path}
                                 selected={isActive}
-                                onClick={() => navigate(item.path)}
+                                //onClick={() => navigate(item.path)}
                                 sx={{
                                     borderRadius: 2,
                                     mb: 0.5,
