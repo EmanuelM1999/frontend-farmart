@@ -1,0 +1,44 @@
+
+import type { RolUsuario } from "../services/auth.service";
+import { PERMISOS, type Permiso } from "./permissions";
+
+export const permisosPorRol: Record<RolUsuario, Permiso[]> = {
+    auxiliar_farmacia: [
+        PERMISOS.CONSULTAR_INVENTARIO,
+        PERMISOS.DISPENSAR_MEDICAMENTOS,
+        PERMISOS.CREAR_TRASLADOS,
+        PERMISOS.RECIBIR_TRASLADOS,
+        PERMISOS.CONSULTAR_KARDEX,
+        PERMISOS.DESPACHAR_TRASLADOS,
+        PERMISOS.ANULAR_TRASLADOS,
+    ],
+
+    regente_farmacia: [
+        PERMISOS.CONSULTAR_INVENTARIO,
+        PERMISOS.DISPENSAR_MEDICAMENTOS,
+        PERMISOS.CREAR_TRASLADOS,
+        PERMISOS.RECIBIR_TRASLADOS,
+        PERMISOS.APROBAR_TRASLADOS,
+        PERMISOS.AUTORIZAR_CONTROL_ESPECIAL,
+        PERMISOS.AJUSTAR_INVENTARIO,
+        PERMISOS.CONSULTAR_KARDEX,
+        PERMISOS.DESPACHAR_TRASLADOS,
+        PERMISOS.ANULAR_TRASLADOS,
+    ],
+
+    medico: [
+        PERMISOS.CREAR_PRESCRIPCIONES,
+        PERMISOS.CONSULTAR_PACIENTES,
+    ],
+
+    auditor: [
+        PERMISOS.CONSULTAR_INVENTARIO,
+        PERMISOS.CONSULTAR_PACIENTES,
+        PERMISOS.CONSULTAR_KARDEX,
+    ],
+
+    admin: [
+        PERMISOS.GESTIONAR_USUARIOS,
+        PERMISOS.GESTIONAR_CATALOGOS,
+    ],
+};

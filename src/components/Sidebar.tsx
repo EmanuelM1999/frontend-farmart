@@ -1,4 +1,3 @@
-
 import {
     Box,
     Divider,
@@ -16,13 +15,24 @@ import {
     SwapHoriz,
     Inventory2Outlined,
     HistoryOutlined,
+    LogoutOutlined,
 } from "@mui/icons-material";
 
-import { NavLink, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import {
+    rolesPorRuta,
+    type RutaConPermisos,
+} from "../permissions/roles";
 
 const drawerWidth = 250;
 
-const menuItems = [
+const menuItems: {
+    label: string;
+    path: RutaConPermisos;
+    icon: React.ReactNode;
+}[] = [
     {
         label: "Dispensación",
         path: "/dispensacion",
@@ -49,6 +59,33 @@ export { drawerWidth };
 
 export default function Sidebar() {
     const location = useLocation();
+    const navigate = useNavigate();
+    const { cerrarSesion, usuario } = useAuth();
+
+    const [cerrandoSesion, setCerrandoSesion] = useState(false);
+
+    // Filtrar las opciones según el rol del usuario autenticado.
+    const menuVisible = menuItems.filter((item) => {
+        if (!usuario) return false;
+
+        const rolesPermitidos = rolesPorRuta[item.path];
+
+        return rolesPermitidos?.includes(usuario.rol) ?? false;
+    });
+
+    const handleLogout = async () => {
+        setCerrandoSesion(true);
+
+        try {
+            await cerrarSesion();
+        } catch {
+            // Aunque falle la petición al servidor,
+            // el cierre local debe permitir salir de la aplicación.
+        } finally {
+            navigate("/login", { replace: true });
+            setCerrandoSesion(false);
+        }
+    };
 
     return (
         <Drawer
@@ -63,6 +100,8 @@ export default function Sidebar() {
                     color: "text.primary",
                     borderRight: 1,
                     borderColor: "divider",
+                    display: "flex",
+                    flexDirection: "column",
                 },
             }}
         >
@@ -77,7 +116,7 @@ export default function Sidebar() {
 
             <Divider />
 
-            <Box sx={{ overflow: "auto", p: 1 }}>
+            <Box sx={{ overflow: "auto", p: 1, flex: 1 }}>
                 <Typography
                     variant="overline"
                     color="text.secondary"
@@ -87,7 +126,7 @@ export default function Sidebar() {
                 </Typography>
 
                 <List>
-                    {menuItems.map((item) => {
+                    {menuVisible.map((item) => {
                         const isActive = location.pathname === item.path;
 
                         return (
@@ -132,6 +171,61 @@ export default function Sidebar() {
                         );
                     })}
                 </List>
+            </Box>
+
+            <Divider />
+
+            <Box sx={{ p: 1 }}>
+                {usuario && (
+                    <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{
+                            px: 2,
+                            py: 1,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        {usuario.name}
+                    </Typography>
+                )}
+
+                <ListItemButton
+                    onClick={handleLogout}
+                    disabled={cerrandoSesion}
+                    sx={{
+                        borderRadius: 2,
+                        color: "error.main",
+
+                        "& .MuiListItemIcon-root": {
+                            color: "error.main",
+                            minWidth: 40,
+                        },
+
+                        "&:hover": {
+                            bgcolor: "error.main",
+                            color: "error.contrastText",
+                        },
+
+                        "&:hover .MuiListItemIcon-root": {
+                            color: "inherit",
+                        },
+                    }}
+                >
+                    <ListItemIcon>
+                        <LogoutOutlined />
+                    </ListItemIcon>
+
+                    <ListItemText
+                        primary={
+                            cerrandoSesion
+                                ? "Cerrando sesión..."
+                                : "Cerrar sesión"
+                        }
+                    />
+                </ListItemButton>
             </Box>
         </Drawer>
     );

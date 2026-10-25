@@ -1,13 +1,15 @@
-
 import { useState, type FormEvent } from "react";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
+
 import {
+    Alert,
     Box,
     Button,
-    Checkbox,
-    FormControlLabel,
+    CircularProgress,
     IconButton,
     InputAdornment,
     Paper,
+    Stack,
     TextField,
     Typography,
 } from "@mui/material";
@@ -20,24 +22,45 @@ import {
     EmailOutlined,
 } from "@mui/icons-material";
 
-//import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
-    //const navigate = useNavigate();
+    const { iniciarSesion, autenticado } = useAuth();
+    const navigate = useNavigate();
+    const location = useLocation();
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
-    const [rememberMe, setRememberMe] = useState(false);
     const [error, setError] = useState("");
+    const [cargando, setCargando] = useState(false);
 
-    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    const destino =
+        (location.state as { from?: { pathname: string } } | null)?.from
+            ?.pathname ?? "/inventario";
+
+    if (autenticado) {
+        return <Navigate to="/inventario" replace />;
+    }
+
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setError("");
+        setCargando(true);
 
-        if (!email.trim() || !password) {
-            //setError("Ingresa tu correo electrónico y contraseña.");
-            return;
+        try {
+            await iniciarSesion({
+                email: email.trim(),
+                password,
+            });
+
+            navigate(destino, { replace: true });
+        } catch {
+            setError(
+                "No fue posible iniciar sesión. Verifica tu correo y contraseña.",
+            );
+        } finally {
+            setCargando(false);
         }
     };
 
@@ -64,6 +87,7 @@ export default function Login() {
                     border: 1,
                     borderColor: "divider",
                     borderRadius: 3,
+                    boxShadow: "0 16px 45px rgba(0,0,0,0.06)",
                 }}
             >
                 <Box
@@ -82,8 +106,8 @@ export default function Login() {
                             alignItems: "center",
                             justifyContent: "center",
                             borderRadius: 3,
-                            bgcolor: "rgba(59,130,246,0.15)",
-                            color: "primary.light",
+                            bgcolor: "rgba(59,130,246,0.12)",
+                            color: "primary.main",
                             mb: 2,
                         }}
                     >
@@ -106,128 +130,131 @@ export default function Login() {
                     </Typography>
                 </Box>
 
-                <Box
-                    component="form"
-                    onSubmit={handleSubmit}
-                    noValidate
-                >
-                    <Typography
-                        variant="body2"
-                        sx={{ mb: 1, fontWeight: 600 }}
-                    >
-                        Correo electrónico
-                    </Typography>
-
-                    <TextField
-                        fullWidth
-                        type="email"
-                        placeholder="usuario@farmart.com"
-                        value={email}
-                        onChange={(event) => setEmail(event.target.value)}
-                        autoComplete="username"
-                        required
-                        sx={{ mb: 2.5 }}
-                        slotProps={{
-                            input: {
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <EmailOutlined color="action" />
-                                    </InputAdornment>
-                                ),
-                            },
-                        }}
-                    />
-
-                    <Typography
-                        variant="body2"
-                        sx={{ mb: 1, fontWeight: 600 }}
-                    >
-                        Contraseña
-                    </Typography>
-
-                    <TextField
-                        fullWidth
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Ingresa tu contraseña"
-                        value={password}
-                        onChange={(event) => setPassword(event.target.value)}
-                        autoComplete="current-password"
-                        required
-                        sx={{ mb: 1 }}
-                        slotProps={{
-                            input: {
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <LockOutlined color="action" />
-                                    </InputAdornment>
-                                ),
-                                endAdornment: (
-                                    <InputAdornment position="end">
-                                        <IconButton
-                                            aria-label={
-                                                showPassword
-                                                    ? "Ocultar contraseña"
-                                                    : "Mostrar contraseña"
-                                            }
-                                            onClick={() =>
-                                                setShowPassword((previous) => !previous)
-                                            }
-                                            edge="end"
-                                        >
-                                            {showPassword
-                                                ? <VisibilityOff />
-                                                : <Visibility />}
-                                        </IconButton>
-                                    </InputAdornment>
-                                ),
-                            },
-                        }}
-                    />
-
-                    {/*
-                    <FormControlLabel
-                        control={
-                            <Checkbox
-                                checked={rememberMe}
-                                onChange={(event) =>
-                                    setRememberMe(event.target.checked)
-                                }
-                            />
-                        }
-                        label={
-                            <Typography variant="body2" color="text.secondary">
-                                Recordarme
+                <Box component="form" onSubmit={handleSubmit}>
+                    <Stack spacing={2.5}>
+                        <Box>
+                            <Typography
+                                variant="body2"
+                                sx={{ mb: 1, fontWeight: 600 }}
+                            >
+                                Correo electrónico
                             </Typography>
-                        }
-                        sx={{ mb: 2 }}
-                    />
-                    */}
 
-                    {error && (
-                        <Typography
-                            role="alert"
-                            color="error"
-                            variant="body2"
-                            sx={{ mb: 2 }}
+                            <TextField
+                                fullWidth
+                                type="email"
+                                placeholder="usuario@farmart.com"
+                                value={email}
+                                onChange={(event) => setEmail(event.target.value)}
+                                autoComplete="username"
+                                required
+                                disabled={cargando}
+                                slotProps={{
+                                    input: {
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <EmailOutlined color="action" />
+                                            </InputAdornment>
+                                        ),
+                                    },
+                                }}
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        borderRadius: 2,
+                                    },
+                                }}
+                            />
+                        </Box>
+
+                        <Box>
+                            <Typography
+                                variant="body2"
+                                sx={{ mb: 1, fontWeight: 600 }}
+                            >
+                                Contraseña
+                            </Typography>
+
+                            <TextField
+                                fullWidth
+                                type={showPassword ? "text" : "password"}
+                                placeholder="Ingresa tu contraseña"
+                                value={password}
+                                onChange={(event) => setPassword(event.target.value)}
+                                autoComplete="current-password"
+                                required
+                                disabled={cargando}
+                                slotProps={{
+                                    input: {
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <LockOutlined color="action" />
+                                            </InputAdornment>
+                                        ),
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    aria-label={
+                                                        showPassword
+                                                            ? "Ocultar contraseña"
+                                                            : "Mostrar contraseña"
+                                                    }
+                                                    onClick={() =>
+                                                        setShowPassword((previous) => !previous)
+                                                    }
+                                                    edge="end"
+                                                    disabled={cargando}
+                                                >
+                                                    {showPassword ? (
+                                                        <VisibilityOff />
+                                                    ) : (
+                                                        <Visibility />
+                                                    )}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ),
+                                    },
+                                }}
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        borderRadius: 2,
+                                    },
+                                }}
+                            />
+                        </Box>
+
+                        {error && (
+                            <Alert
+                                severity="error"
+                                onClose={() => setError("")}
+                            >
+                                {error}
+                            </Alert>
+                        )}
+
+                        <Button
+                            type="submit"
+                            fullWidth
+                            variant="contained"
+                            size="large"
+                            disabled={cargando}
+                            sx={{
+                                py: 1.4,
+                                borderRadius: 2,
+                                textTransform: "none",
+                                fontWeight: 700,
+                                boxShadow: "none",
+                                "&:hover": {
+                                    boxShadow: "0 5px 14px rgba(25,118,210,0.2)",
+                                },
+                            }}
                         >
-                            {error}
-                        </Typography>
-                    )}
-
-                    <Button
-                        type="submit"
-                        fullWidth
-                        variant="contained"
-                        size="large"
-                        sx={{
-                            py: 1.4,
-                            borderRadius: 2,
-                            textTransform: "none",
-                            fontWeight: 700,
-                        }}
-                    >
-                        Iniciar sesión
-                    </Button>
+                            {cargando ? (
+                                <CircularProgress size={24} color="inherit" />
+                            ) : (
+                                "Iniciar sesión"
+                            )}
+                        </Button>
+                    </Stack>
                 </Box>
 
                 <Typography
