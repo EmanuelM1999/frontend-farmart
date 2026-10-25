@@ -1,34 +1,25 @@
 
-import { Box } from "@mui/material";
-import Sidebar from "../components/Sidebar";
+import { Box, Toolbar } from "@mui/material";
 import { Outlet } from "react-router-dom";
+import Sidebar from "../components/Sidebar";
 
 export default function DashboardLayout() {
     return (
-        <Box
-            sx={{
-                display: "flex",
-                width: "100%",
-                minHeight: "100vh",
-                bgcolor: "background.default",
-            }}
-        >
-            {/* Menú lateral */}
+        <Box sx={{ display: "flex", minHeight: "100vh" }}>
             <Sidebar />
 
-            {/* Contenido principal */}
             <Box
                 component="main"
                 sx={{
                     flexGrow: 1,
                     minWidth: 0,
                     minHeight: "100vh",
-                    p: 3,
                     bgcolor: "background.default",
                     color: "text.primary",
+                    p: { xs: 2, md: 3 },
                 }}
             >
-                {/* Aquí se renderiza la página seleccionada */}
+                <Toolbar />
                 <Outlet />
             </Box>
         </Box>

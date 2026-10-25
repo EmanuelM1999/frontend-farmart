@@ -18,7 +18,7 @@ import {
     HistoryOutlined,
 } from "@mui/icons-material";
 
-//import { useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 
 const drawerWidth = 250;
 
@@ -48,8 +48,7 @@ const menuItems = [
 export { drawerWidth };
 
 export default function Sidebar() {
-    //const location = useLocation();
-    //const navigate = useNavigate();
+    const location = useLocation();
 
     return (
         <Drawer
@@ -70,11 +69,7 @@ export default function Sidebar() {
             <Toolbar>
                 <Typography
                     variant="h6"
-                    sx={{
-                        fontWeight: 700,
-                        color: "text.primary",
-                        whiteSpace: "nowrap",
-                    }}
+                    sx={{ fontWeight: 700, whiteSpace: "nowrap" }}
                 >
                     Farmart IPS
                 </Typography>
@@ -98,12 +93,14 @@ export default function Sidebar() {
                         return (
                             <ListItemButton
                                 key={item.path}
+                                component={NavLink}
+                                to={item.path}
                                 selected={isActive}
-                                //onClick={() => navigate(item.path)}
                                 sx={{
                                     borderRadius: 2,
                                     mb: 0.5,
                                     color: "text.secondary",
+                                    textDecoration: "none",
 
                                     "& .MuiListItemIcon-root": {
                                         color: "text.secondary",
@@ -129,10 +126,7 @@ export default function Sidebar() {
                                     },
                                 }}
                             >
-                                <ListItemIcon>
-                                    {item.icon}
-                                </ListItemIcon>
-
+                                <ListItemIcon>{item.icon}</ListItemIcon>
                                 <ListItemText primary={item.label} />
                             </ListItemButton>
                         );
