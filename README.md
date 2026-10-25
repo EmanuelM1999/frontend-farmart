@@ -1,75 +1,80 @@
-# React + TypeScript + Vite
+# Farmart IPS — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicación web desarrollada con React y Vite para interactuar con los servicios de la API REST de Farmart IPS.
 
-Currently, two official plugins are available:
+## Tecnologías
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React
+- Vite
+- TypeScript
+- Axios
+- Docker y Docker Compose
 
-## React Compiler
+## Requisitos previos
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Docker Desktop con Docker Compose.
+- Git.
+- Backend de Farmart IPS configurado y disponible.
 
-## Expanding the ESLint configuration
+## Ejecución del proyecto
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Clonar el repositorio:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+git clone <URL_DEL_REPOSITORIO>
+cd frontend-farmart
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+Crear el archivo de variables de entorno a partir de la plantilla, si el repositorio incluye `.env.example`, y configurar la URL de la API.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Ejemplo:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```env
+VITE_API_URL=http://localhost:8000
 ```
+
+El nombre de la variable debe coincidir con el utilizado en el código del frontend. En Vite, las variables `VITE_*` se incorporan al código durante la compilación; no deben contener secretos.
+
+Construir e iniciar el frontend:
+
+```bash
+docker compose up --build -d
+```
+
+Verificar el estado del contenedor:
+
+```bash
+docker compose ps
+```
+
+## Acceso a la aplicación
+
+- Frontend local: `http://localhost:5173`
+- Backend local: `http://localhost:8000`
+
+Estas direcciones corresponden a la configuración local esperada y deben ajustarse si los puertos publicados en Docker Compose son diferentes.
+
+## Integración con el backend
+
+El frontend consume la API REST del backend para realizar las operaciones de la aplicación. La URL base se configura mediante variables de entorno y las solicitudes se centralizan en los módulos de comunicación con la API.
+
+La autenticación y el control de acceso a las vistas deben respetar las respuestas y los permisos definidos por el backend.
+
+## Decisiones de diseño y trade-offs
+
+1. **React como biblioteca de interfaz:** permite crear componentes reutilizables y organizar la interfaz por funcionalidades; a cambio, requiere definir una estructura de componentes y gestionar su estado.
+2. **Vite como herramienta de desarrollo y compilación:** proporciona un flujo de desarrollo rápido; las variables de entorno deben configurarse correctamente para cada entorno de compilación.
+3. **Consumo de una API REST independiente:** desacopla la interfaz de la lógica de negocio y permite cambiar el backend sin reconstruir toda la arquitectura; requiere gestionar errores de red, autenticación y compatibilidad de endpoints.
+4. **Docker Compose:** facilita ejecutar el frontend en un entorno reproducible, aunque la configuración local debe adaptarse al entorno de producción.
+
+## Supuestos
+
+- El backend está disponible en la URL configurada para la API.
+- Los usuarios y roles se gestionan mediante los servicios del backend.
+- Los datos de prueba son ficticios y no incluyen información real de pacientes ni de la IPS.
+
+## Fuera del alcance
+
+- Publicación automatizada mediante CI/CD, mientras no esté implementada.
+- Configuración de un dominio público y certificados TLS de producción.
+- Gestión de infraestructura de alta disponibilidad y escalamiento automático.
