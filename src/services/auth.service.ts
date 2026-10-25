@@ -40,8 +40,8 @@ export const authService = {
     },
 
     async obtenerUsuario(): Promise<Usuario> {
-        const { data } = await api.get<Usuario>("/user");
-        return data;
+        const { data } = await api.get<{ data: Usuario }>("/user");
+        return data.data;
     },
 
     async logout(): Promise<void> {
