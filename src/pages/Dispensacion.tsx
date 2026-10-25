@@ -442,10 +442,12 @@ export default function Dispensacion() {
                 </Typography>
             </Box>
 
+            {/*
             <Alert severity="info">
                 Modo de demostración: no se modifica el inventario ni se
                 registra información clínica real.
             </Alert>
+            */}
 
             {mensaje && (
                 <Alert severity="success">{mensaje}</Alert>

@@ -25,7 +25,7 @@ import {
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
-    const { iniciarSesion, autenticado } = useAuth();
+    const { iniciarSesion, autenticado, usuario } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -35,9 +35,6 @@ export default function Login() {
     const [error, setError] = useState("");
     const [cargando, setCargando] = useState(false);
 
-    const destino =
-        (location.state as { from?: { pathname: string } } | null)?.from
-            ?.pathname ?? "/inventario";
 
     if (autenticado) {
         return <Navigate to="/inventario" replace />;
@@ -53,6 +50,17 @@ export default function Login() {
                 email: email.trim(),
                 password,
             });
+
+            const rol = usuario?.rol;
+
+            const destino =
+                (location.state as { from?: { pathname: string } } | null)
+                    ?.from?.pathname ??
+                (rol === "admin"
+                    ? "/usuarios"
+                    : rol === "medico"
+                        ? "/dispensacion"
+                        : "/inventario");
 
             navigate(destino, { replace: true });
         } catch {

@@ -8,6 +8,7 @@ import Inventario from "./pages/Inventario";
 import Kardex from "./pages/Kardex";
 import Traslados from "./pages/Traslados";
 import Dispensacion from "./pages/Dispensacion";
+import Usuarios from "./pages/Usuarios";
 import AccesoDenegado from "./pages/AccesoDenegado";
 
 // Conserva el import y el layout que ya existen en tu proyecto.
@@ -21,11 +22,12 @@ export default function App() {
         <Route path="/login" element={<Login />} />
 
         {/* Página pública para usuarios sin permisos */}
-        <Route
-          path="/acceso-denegado"
-          element={<AccesoDenegado />}
-        />
-
+        <Route element={<DashboardLayout />}>
+          <Route
+            path="/acceso-denegado"
+            element={<AccesoDenegado />}
+          />
+        </Route>
         {/* Rutas autenticadas */}
         <Route element={<ProtectedRoute />}>
           <Route element={<DashboardLayout />}>
@@ -34,6 +36,24 @@ export default function App() {
               index
               element={<Navigate to="/inventario" replace />}
             />
+
+            {/* Auxiliar, regente y medico*/}
+            <Route
+              element={
+                <ProtectedRoute
+                  rolesPermitidos={[
+                    "auxiliar_farmacia",
+                    "regente_farmacia",
+                    "medico"
+                  ]}
+                />
+              }
+            >
+              <Route
+                path="dispensacion"
+                element={<Dispensacion />}
+              />
+            </Route>
 
             {/* Auxiliar y regente */}
             <Route
@@ -46,10 +66,6 @@ export default function App() {
                 />
               }
             >
-              <Route
-                path="dispensacion"
-                element={<Dispensacion />}
-              />
               <Route
                 path="traslados"
                 element={<Traslados />}
@@ -77,6 +93,21 @@ export default function App() {
                 element={<Kardex />}
               />
             </Route>
+            {/* Admin */}
+            <Route
+              element={
+                <ProtectedRoute
+                  rolesPermitidos={[
+                    "admin",
+                  ]}
+                />
+              }
+            >
+              <Route
+                path="usuarios"
+                element={<Usuarios />}
+              />
+            </Route>
           </Route>
         </Route>
 
@@ -86,6 +117,6 @@ export default function App() {
           element={<Navigate to="/acceso-denegado" replace />}
         />
       </Routes>
-    </AuthProvider>
+    </AuthProvider >
   );
 }
