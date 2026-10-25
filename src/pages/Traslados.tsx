@@ -27,12 +27,14 @@ import {
 } from "@mui/material";
 import type { SelectChangeEvent } from "@mui/material";
 
+/*
 type RolUsuario =
     | "auxiliar_farmacia"
     | "regente_farmacia"
     | "medico"
     | "auditor"
     | "admin";
+*/
 
 type EstadoTraslado =
     | "BORRADOR"
@@ -291,7 +293,7 @@ export default function Traslados() {
      * Datos temporales para probar la interfaz.
      * Luego el usuario y el rol vendrán del AuthContext.
      */
-    const rolUsuario: RolUsuario = "auxiliar_farmacia";
+    //const rolUsuario: RolUsuario = "auxiliar_farmacia";
     const usuarioActualId = 1;
 
     const [traslados, setTraslados] = useState(trasladosIniciales);
@@ -314,10 +316,10 @@ export default function Traslados() {
     const [mensaje, setMensaje] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    const esAuxiliar = rolUsuario === "auxiliar_farmacia";
-    const esRegente = rolUsuario === "regente_farmacia";
-    const esAuditor = rolUsuario === "auditor";
-    const soloLectura = esAuditor || rolUsuario === "medico" || rolUsuario === "admin";
+    const esAuxiliar = true;
+    const esRegente = false;
+    //const esAuditor = false;
+    //const soloLectura = esAuditor || rolUsuario === "medico" || rolUsuario === "admin";
 
     const trasladosFiltrados = useMemo(() => {
         const texto = busqueda.trim().toLowerCase();

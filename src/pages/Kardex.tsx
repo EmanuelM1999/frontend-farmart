@@ -18,7 +18,7 @@ import {
     TableHead,
     TablePagination,
     TableRow,
-    TextField,
+    //TextField,
     Typography,
 } from "@mui/material";
 
@@ -53,6 +53,7 @@ type PaginacionMeta = {
     total: number;
 };
 
+/*
 const tiposMovimiento: TipoMovimiento[] = [
     "Entrada",
     "Dispensación",
@@ -60,6 +61,7 @@ const tiposMovimiento: TipoMovimiento[] = [
     "Traslado de entrada",
     "Ajuste",
 ];
+*/
 
 const tiposBackend: Record<string, TipoMovimiento> = {
     entrada: "Entrada",
@@ -107,16 +109,20 @@ function obtenerColorMovimiento(
     }
 }
 
+/*
 function obtenerFechaISO(fecha: string): string {
     return fecha.slice(0, 10);
 }
+*/
 
 export default function Kardex() {
     const [bodega, setBodega] = useState("todas");
+    /*
     const [tipo, setTipo] = useState("todos");
     const [busqueda, setBusqueda] = useState("");
     const [fechaDesde, setFechaDesde] = useState("");
     const [fechaHasta, setFechaHasta] = useState("");
+    */
 
     const [movimientos, setMovimientos] = useState<MovimientoInventario[]>([]);
 
@@ -142,7 +148,7 @@ export default function Kardex() {
     // Reinicia la página al cambiar los filtros.
     useEffect(() => {
         setPagina(0);
-    }, [bodega, tipo, busqueda, fechaDesde, fechaHasta]);
+    }, [bodega/*, tipo, busqueda, fechaDesde, fechaHasta */]);
 
     // Consulta el endpoint real del Kardex.
     useEffect(() => {
@@ -188,13 +194,13 @@ export default function Kardex() {
     }, [pagina, filasPorPagina]);
 
     // Estos filtros se aplican a los registros de la página recibida.
-    const textoBusqueda = busqueda.trim().toLowerCase();
+    //const textoBusqueda = busqueda.trim().toLowerCase();
 
     const movimientosFiltrados = movimientos.filter((movimiento) => {
         const coincideBodega =
             bodega === "todas" || movimiento.bodega === bodega;
 
-        const coincideTipo =
+        /*const coincideTipo =
             tipo === "todos" || movimiento.tipo === tipo;
 
         const coincideTexto = [
@@ -204,22 +210,23 @@ export default function Kardex() {
             movimiento.referencia,
             movimiento.usuario,
             movimiento.bodega,
-        ].some((valor) => valor.toLowerCase().includes(textoBusqueda));
+        ].some((valor) => valor.toLowerCase().includes(textoBusqueda));*/
 
-        const fecha = obtenerFechaISO(movimiento.fechaOriginal);
+        //const fecha = obtenerFechaISO(movimiento.fechaOriginal);
 
-        const coincideFechaDesde = !fechaDesde || fecha >= fechaDesde;
-        const coincideFechaHasta = !fechaHasta || fecha <= fechaHasta;
+        //const coincideFechaDesde = !fechaDesde || fecha >= fechaDesde;
+        //const coincideFechaHasta = !fechaHasta || fecha <= fechaHasta;
 
         return (
-            coincideBodega &&
+            coincideBodega /*&&
             coincideTipo &&
             coincideTexto &&
             coincideFechaDesde &&
-            coincideFechaHasta
+            coincideFechaHasta*/
         );
     });
 
+    /*
     const entradas = movimientosFiltrados
         .filter((movimiento) => movimiento.cantidad > 0)
         .reduce((total, movimiento) => total + movimiento.cantidad, 0);
@@ -230,6 +237,7 @@ export default function Kardex() {
 
     const fechasInvalidas =
         Boolean(fechaDesde && fechaHasta && fechaDesde > fechaHasta);
+    */
 
     return (
         <Stack
@@ -325,7 +333,6 @@ export default function Kardex() {
                                     ))}
                                 </Select>
                             </FormControl>
-                            
 
                             <TextField
                                 size="small"
@@ -383,12 +390,14 @@ export default function Kardex() {
                         </Stack>
                         */}
 
+                        {/*
                         {fechasInvalidas && (
                             <Alert severity="warning">
                                 La fecha inicial no puede ser posterior a la
                                 fecha final.
                             </Alert>
                         )}
+                        */}
 
                         <Typography variant="body2" color="text.secondary">
                             {paginacion.total} movimientos en total
@@ -488,7 +497,7 @@ export default function Kardex() {
                                     </TableRow>
                                 ))}
 
-                                {!cargando &&
+                                {/*!cargando &&
                                     (fechasInvalidas ||
                                         movimientosFiltrados.length === 0) && (
                                         <TableRow>
@@ -503,7 +512,7 @@ export default function Kardex() {
                                                       : "No se encontraron movimientos."}
                                             </TableCell>
                                         </TableRow>
-                                    )}
+                                    )*/}
                             </TableBody>
                         </Table>
                     </TableContainer>
