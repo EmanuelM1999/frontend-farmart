@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import {
     Alert,
@@ -17,193 +18,72 @@ import {
     TableHead,
     TablePagination,
     TableRow,
-    TextField,
     Typography,
 } from "@mui/material";
 
-type InventarioItem = {
+import {
+    inventarioService,
+    type InventarioItem,
+} from "../services/inventario.service";
+
+type BodegaOption = {
     id: number;
-    medicamento: string;
     codigo: string;
-    bodega: string;
-    lote: string;
-    vencimiento: string;
-    existencia: number;
-    minimo: number;
+    nombre: string;
 };
-
-type PaginacionMeta = {
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    total: number;
-};
-
-type InventarioResponse = {
-    data: InventarioItem[];
-    meta: PaginacionMeta;
-};
-
-type FiltrosInventario = {
-    page: number;
-    perPage: number;
-    bodega: string;
-    search: string;
-};
-
-const datosDemo: InventarioItem[] = [
-    {
-        id: 1,
-        medicamento: "Acetaminofén 500 mg",
-        codigo: "MED-001",
-        bodega: "Bodega principal",
-        lote: "AC-2026-01",
-        vencimiento: "2026-11-15",
-        existencia: 120,
-        minimo: 50,
-    },
-    {
-        id: 2,
-        medicamento: "Clonazepam 0.5 mg",
-        codigo: "MED-002",
-        bodega: "Bodega principal",
-        lote: "CL-2026-04",
-        vencimiento: "2027-06-30",
-        existencia: 12,
-        minimo: 20,
-    },
-    {
-        id: 3,
-        medicamento: "Ibuprofeno 400 mg",
-        codigo: "MED-003",
-        bodega: "Bodega secundaria",
-        lote: "IB-2026-02",
-        vencimiento: "2027-03-20",
-        existencia: 85,
-        minimo: 30,
-    },
-    {
-        id: 4,
-        medicamento: "Amoxicilina 500 mg",
-        codigo: "MED-004",
-        bodega: "Bodega principal",
-        lote: "AM-2026-08",
-        vencimiento: "2026-12-10",
-        existencia: 18,
-        minimo: 25,
-    },
-];
-
-function diasParaVencer(fecha: string): number {
-    const [anio, mes, dia] = fecha.split("-").map(Number);
-    const vencimiento = Date.UTC(anio, mes - 1, dia);
-
-    const ahora = new Date();
-    const hoy = Date.UTC(
-        ahora.getFullYear(),
-        ahora.getMonth(),
-        ahora.getDate(),
-    );
-
-    return Math.round((vencimiento - hoy) / 86_400_000);
-}
-
-/**
- * Simula una respuesta paginada de Laravel.
- * Se reemplazará por una petición HTTP cuando se configure Axios.
- */
-function consultarInventarioMock({
-    page,
-    perPage,
-    bodega,
-    search,
-}: FiltrosInventario): InventarioResponse {
-    const texto = search.trim().toLowerCase();
-
-    const filtrados = datosDemo.filter((item) => {
-        const coincideBodega =
-            bodega === "todas" || item.bodega === bodega;
-
-        const coincideTexto = [
-            item.medicamento,
-            item.codigo,
-            item.lote,
-        ].some((valor) => valor.toLowerCase().includes(texto));
-
-        return coincideBodega && coincideTexto;
-    });
-
-    const total = filtrados.length;
-    const ultimaPagina = Math.max(1, Math.ceil(total / perPage));
-    const paginaValida = Math.min(Math.max(1, page), ultimaPagina);
-    const inicio = (paginaValida - 1) * perPage;
-
-    return {
-        data: filtrados.slice(inicio, inicio + perPage),
-        meta: {
-            current_page: paginaValida,
-            last_page: ultimaPagina,
-            per_page: perPage,
-            total,
-        },
-    };
-}
 
 export default function Inventario() {
-    const [bodega, setBodega] = useState("todas");
-    const [busqueda, setBusqueda] = useState("");
-
     const [inventario, setInventario] = useState<InventarioItem[]>([]);
+    const [bodegas, setBodegas] = useState<BodegaOption[]>([]);
+    const [bodegaId, setBodegaId] = useState<number | "todas">("todas");
 
-    // MUI comienza las páginas en 0; Laravel normalmente en 1.
+    // MUI usa páginas desde 0; Laravel desde 1.
     const [pagina, setPagina] = useState(0);
     const [filasPorPagina, setFilasPorPagina] = useState(10);
 
-    const [paginacion, setPaginacion] = useState<PaginacionMeta>({
-        current_page: 1,
-        last_page: 1,
-        per_page: 10,
-        total: 0,
-    });
-
+    const [total, setTotal] = useState(0);
     const [cargando, setCargando] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Reinicia la paginación cuando cambian los filtros.
-    useEffect(() => {
-        setPagina(0);
-    }, [bodega, busqueda]);
-
-    // Carga los registros de la página seleccionada.
     useEffect(() => {
         let activo = true;
 
         async function cargarInventario() {
-            try {
-                setCargando(true);
-                setError(null);
+            setCargando(true);
+            setError(null);
 
-                // Temporal: reemplazar por Axios cuando esté configurado.
-                const response = consultarInventarioMock({
-                    page: pagina + 1,
-                    perPage: filasPorPagina,
-                    bodega,
-                    search: busqueda,
-                });
+            try {
+                const respuesta = await inventarioService.listar(
+                    bodegaId === "todas" ? undefined : bodegaId,
+                    pagina + 1,
+                    filasPorPagina,
+                );
 
                 if (!activo) return;
 
-                setInventario(response.data);
-                setPaginacion(response.meta);
+                setInventario(respuesta.data);
+                setTotal(respuesta.meta.total);
+
+                // Conserva las bodegas que ya se hayan encontrado.
+                setBodegas((anteriores) => {
+                    const mapa = new Map(
+                        anteriores.map((bodega) => [bodega.id, bodega]),
+                    );
+
+                    respuesta.data.forEach((item) => {
+                        mapa.set(item.bodega.id, item.bodega);
+                    });
+
+                    return Array.from(mapa.values());
+                });
             } catch {
-                if (activo) {
-                    setError("No fue posible cargar el inventario.");
-                    setInventario([]);
-                }
+                if (!activo) return;
+
+                setError("No fue posible cargar el inventario.");
+                setInventario([]);
+                setTotal(0);
             } finally {
-                if (activo) {
-                    setCargando(false);
-                }
+                if (activo) setCargando(false);
             }
         }
 
@@ -212,165 +92,101 @@ export default function Inventario() {
         return () => {
             activo = false;
         };
-    }, [pagina, filasPorPagina, bodega, busqueda]);
-
-    // Estas alertas son temporales y corresponden a la página actual.
-    // Más adelante se pueden alimentar con un resumen del backend.
-    const lotesVencidos = inventario.filter(
-        (item) => diasParaVencer(item.vencimiento) < 0,
-    );
-
-    const lotesPorVencer = inventario.filter((item) => {
-        const dias = diasParaVencer(item.vencimiento);
-        return dias >= 0 && dias <= 90;
-    });
-
-    const productosBajoMinimo = inventario.filter(
-        (item) => item.existencia < item.minimo,
-    );
+    }, [bodegaId, pagina, filasPorPagina]);
 
     return (
-        <Stack
-            spacing={3}
-            sx={{ width: "100%", maxWidth: "none", minWidth: 0 }}
-        >
+        <Stack spacing={3} sx={{ width: "100%", minWidth: 0 }}>
             <Box>
-                <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                <Typography variant="h4"
+                    sx={{
+                        fontWeight: 700
+                    }}>
                     Inventario
                 </Typography>
 
                 <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-                    Existencias, lotes y alertas por bodega.
+                    Consulta de existencias por bodega, medicamento y lote.
                 </Typography>
             </Box>
 
-            <Box
-                sx={{
-                    display: "grid",
-                    gridTemplateColumns: {
-                        xs: "1fr",
-                        sm: "repeat(3, minmax(0, 1fr))",
-                    },
-                    gap: 2,
-                }}
-            >
-                <Card>
-                    <CardContent>
-                        <Typography color="text.secondary" variant="body2">
-                            Lotes consultados
-                        </Typography>
-                        <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                            {paginacion.total}
-                        </Typography>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardContent>
-                        <Typography color="text.secondary" variant="body2">
-                            Próximos a vencer
-                        </Typography>
-                        <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                            {lotesPorVencer.length}
-                        </Typography>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardContent>
-                        <Typography color="text.secondary" variant="body2">
-                            Bajo stock mínimo
-                        </Typography>
-                        <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                            {productosBajoMinimo.length}
-                        </Typography>
-                    </CardContent>
-                </Card>
-            </Box>
-
-            {error && <Alert severity="error">{error}</Alert>}
-
-            {lotesVencidos.length > 0 && (
-                <Alert severity="error">
-                    Hay {lotesVencidos.length} lote(s) vencido(s) en esta
-                    página. No deben utilizarse para dispensaciones ni
-                    traslados.
-                </Alert>
-            )}
-
-            {lotesPorVencer.length > 0 && (
-                <Alert severity="warning">
-                    Hay {lotesPorVencer.length} lote(s) próximos a vencer
-                    en esta página.
-                </Alert>
-            )}
-
-            {productosBajoMinimo.length > 0 && (
-                <Alert severity="error">
-                    Hay {productosBajoMinimo.length} registro(s) por debajo
-                    del stock mínimo en esta página.
-                </Alert>
-            )}
-
             <Card>
                 <CardContent>
-                    <Typography
-                        variant="h6"
-                        sx={{ fontWeight: 600, mb: 2 }}
-                    >
-                        Existencias por lote
-                    </Typography>
-
                     <Stack
                         direction={{ xs: "column", sm: "row" }}
                         spacing={2}
-                        sx={{ mb: 3 }}
+                        sx={{
+                            alignItems: { sm: "center" },
+                            justifyContent: "space-between",
+                        }}
                     >
-                        <FormControl size="small"
-                            sx={{
-                                width: { xs: "100%", sm: "25%" },
-                            }}>
-                            <InputLabel id="bodega-label">Bodega</InputLabel>
+                        <Box>
+                            <Typography variant="h6"
+                                sx={{
+                                    fontWeight: 600
+                                }}>
+                                Existencias por lote
+                            </Typography>
+
+                            <Typography
+                                variant="body2"
+                                color="text.secondary"
+                            >
+                                {total} registro(s) encontrados
+                            </Typography>
+                        </Box>
+
+                        <FormControl
+                            size="small"
+                            sx={{ width: { xs: "100%", sm: 280 } }}
+                        >
+                            <InputLabel id="bodega-label">
+                                Bodega
+                            </InputLabel>
+
                             <Select
                                 labelId="bodega-label"
-                                value={bodega}
                                 label="Bodega"
-                                onChange={(event) =>
-                                    setBodega(event.target.value)
-                                }
+                                value={bodegaId}
+                                onChange={(event) => {
+                                    const valor = event.target.value;
+
+                                    setBodegaId(
+                                        valor === "todas"
+                                            ? "todas"
+                                            : Number(valor),
+                                    );
+                                    setPagina(0);
+                                }}
                             >
                                 <MenuItem value="todas">
                                     Todas las bodegas
                                 </MenuItem>
-                                <MenuItem value="Bodega principal">
-                                    Bodega principal
-                                </MenuItem>
-                                <MenuItem value="Bodega secundaria">
-                                    Bodega secundaria
-                                </MenuItem>
+
+                                {bodegas.map((bodega) => (
+                                    <MenuItem
+                                        key={bodega.id}
+                                        value={bodega.id}
+                                    >
+                                        {bodega.nombre} ({bodega.codigo})
+                                    </MenuItem>
+                                ))}
                             </Select>
                         </FormControl>
-
-                        {/*
-                        <TextField
-                            fullWidth
-                            size="small"
-                            label="Buscar medicamento o lote"
-                            value={busqueda}
-                            onChange={(event) =>
-                                setBusqueda(event.target.value)
-                            }
-                        />
-                        */}
                     </Stack>
 
+                    {error && (
+                        <Alert severity="error" sx={{ mt: 2 }}>
+                            {error}
+                        </Alert>
+                    )}
+
                     {cargando && (
-                        <Alert severity="info" sx={{ mb: 2 }}>
+                        <Alert severity="info" sx={{ mt: 2 }}>
                             Cargando inventario...
                         </Alert>
                     )}
 
-                    <TableContainer>
+                    <TableContainer sx={{ mt: 3 }}>
                         <Table>
                             <TableHead>
                                 <TableRow>
@@ -381,99 +197,101 @@ export default function Inventario() {
                                     <TableCell align="right">
                                         Existencia
                                     </TableCell>
-                                    <TableCell align="right">
-                                        Mínimo
-                                    </TableCell>
-                                    <TableCell>Estado</TableCell>
+                                    <TableCell>Control especial</TableCell>
                                 </TableRow>
                             </TableHead>
 
                             <TableBody>
-                                {inventario.map((item) => {
-                                    const dias = diasParaVencer(
-                                        item.vencimiento,
-                                    );
-                                    const vencido = dias < 0;
-                                    const bajoMinimo =
-                                        item.existencia < item.minimo;
-                                    const porVencer =
-                                        dias >= 0 && dias <= 90;
+                                {inventario.map((item) => (
+                                    <TableRow key={item.id} hover>
+                                        <TableCell>
+                                            <Typography sx={{
+                                                fontWeight: 600
+                                            }}>
+                                                {item.medicamento.nombre}
+                                            </Typography>
 
-                                    let estado = "Normal";
-                                    let color:
-                                        | "success"
-                                        | "warning"
-                                        | "error" = "success";
+                                            <Typography
+                                                variant="caption"
+                                                color="text.secondary"
+                                            >
+                                                {item.medicamento.codigo}
+                                            </Typography>
+                                        </TableCell>
 
-                                    if (vencido) {
-                                        estado = "Vencido";
-                                        color = "error";
-                                    } else if (porVencer) {
-                                        estado = "Por vencer";
-                                        color = "warning";
-                                    }
+                                        <TableCell>
+                                            <Typography>
+                                                {item.bodega.nombre}
+                                            </Typography>
 
-                                    return (
-                                        <TableRow key={item.id} hover>
-                                            <TableCell>
-                                                <Typography
-                                                    sx={{ fontWeight: 600 }}
-                                                >
-                                                    {item.medicamento}
-                                                </Typography>
-                                                <Typography
-                                                    variant="caption"
-                                                    color="text.secondary"
-                                                >
-                                                    {item.codigo}
-                                                </Typography>
-                                            </TableCell>
+                                            <Typography
+                                                variant="caption"
+                                                color="text.secondary"
+                                            >
+                                                {item.bodega.codigo}
+                                            </Typography>
+                                        </TableCell>
 
-                                            <TableCell>{item.bodega}</TableCell>
-                                            <TableCell>{item.lote}</TableCell>
-                                            <TableCell>
-                                                {item.vencimiento}
-                                            </TableCell>
-                                            <TableCell align="right">
-                                                {item.existencia}
-                                            </TableCell>
-                                            <TableCell align="right">
-                                                {item.minimo}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Stack
-                                                    direction="row"
-                                                    spacing={0.5}
-                                                    useFlexGap
-                                                    sx={{ flexWrap: "wrap" }}
-                                                >
-                                                    <Chip
-                                                        label={estado}
-                                                        color={color}
-                                                        size="small"
-                                                    />
+                                        <TableCell>
+                                            <Typography>
+                                                {item.lote.codigo}
+                                            </Typography>
+                                        </TableCell>
 
-                                                    {bajoMinimo && (
-                                                        <Chip
-                                                            label="Stock bajo"
-                                                            color="error"
-                                                            size="small"
-                                                        />
-                                                    )}
-                                                </Stack>
-                                            </TableCell>
-                                        </TableRow>
-                                    );
-                                })}
+                                        <TableCell>
+                                            {new Date(
+                                                item.lote.fecha_vencimiento,
+                                            ).toLocaleDateString("es-CO", {
+                                                timeZone: "UTC",
+                                            })}
+                                        </TableCell>
+
+                                        <TableCell align="right">
+                                            <Typography sx={{
+                                                fontWeight: 600
+                                            }}>
+                                                {item.cantidad.toLocaleString(
+                                                    "es-CO",
+                                                )}
+                                            </Typography>
+
+                                            <Typography
+                                                variant="caption"
+                                                color="text.secondary"
+                                            >
+                                                {item.medicamento.unidad_medida}
+                                            </Typography>
+                                        </TableCell>
+
+                                        <TableCell>
+                                            <Chip
+                                                size="small"
+                                                label={
+                                                    item.medicamento
+                                                        .control_especial
+                                                        ? "Sí"
+                                                        : "No"
+                                                }
+                                                color={
+                                                    item.medicamento
+                                                        .control_especial
+                                                        ? "warning"
+                                                        : "default"
+                                                }
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
 
                                 {!cargando && inventario.length === 0 && (
                                     <TableRow>
                                         <TableCell
-                                            colSpan={7}
+                                            colSpan={6}
                                             align="center"
+                                            sx={{ py: 5 }}
                                         >
                                             {error
-                                                ? "No se pudo cargar el inventario."
+                                                ? "No se pudo consultar el inventario."
                                                 : "No se encontraron registros."}
                                         </TableCell>
                                     </TableRow>
@@ -484,7 +302,7 @@ export default function Inventario() {
 
                     <TablePagination
                         component="div"
-                        count={paginacion.total}
+                        count={total}
                         page={pagina}
                         rowsPerPage={filasPorPagina}
                         onPageChange={(_, nuevaPagina) => {

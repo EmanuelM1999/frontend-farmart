@@ -633,12 +633,6 @@ export default function Traslados() {
                 </Typography>
             </Box>
 
-            <Alert severity="info">
-                Modo de demostración: los cambios de estado solo se guardan
-                en memoria. El backend deberá controlar existencias, permisos
-                y movimientos de Kardex.
-            </Alert>
-
             {mensaje && <Alert severity="success">{mensaje}</Alert>}
             {error && <Alert severity="error">{error}</Alert>}
 
